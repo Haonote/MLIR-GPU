@@ -1,4 +1,4 @@
-// RUN: tiny-opt %s | FileCheck %s
+// RUN: mlir-gpu-opt %s | FileCheck %s
 
 // CHECK-LABEL: func.func @test_add
 // CHECK: %[[RES:.*]] = arith.addi %arg0, %arg1 : i32

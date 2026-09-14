@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(TinyMLIR-GPU LANGUAGES CXX C)
+project(MLIR-GPU LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -34,8 +34,13 @@ link_directories(${LLVM_BUILD_LIBRARY_DIR})
 add_definitions(${LLVM_DEFINITIONS})
 
 # 4. 添加子目录
-add_subdirectory(tools/tiny-opt)
+add_subdirectory(tools/mlir-gpu-opt)
 
 # 5. 测试配置
-find_program(LLVM_EXTERNAL_LIT NAMES llvm-lit lit REQUIRED PATHS ${LLVM_TOOLS_BINARY_DIR})
+find_program(LLVM_EXTERNAL_LIT NAMES llvm-lit lit
+    PATHS
+    ${LLVM_TOOLS_BINARY_DIR}
+    /home/hao/miniconda3/bin
+    /home/hao/project/LLVM/llvm-project/build/bin
+)
 add_subdirectory(test)

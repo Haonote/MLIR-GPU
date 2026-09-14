@@ -3,9 +3,9 @@ import sys
 
 config.llvm_tools_dir = "@LLVM_TOOLS_BINARY_DIR@"
 config.mlir_obj_root = "@MLIR_BINARY_DIR@"
-config.tiny_tools_dir = "@CMAKE_BINARY_DIR@/bin"
-config.tiny_src_root = "@CMAKE_CURRENT_SOURCE_DIR@/.."
-config.tiny_obj_root = "@CMAKE_BINARY_DIR@"
+config.mlir_gpu_tools_dir = "@CMAKE_BINARY_DIR@/bin"
+config.mlir_gpu_src_root = "@CMAKE_CURRENT_SOURCE_DIR@/.."
+config.mlir_gpu_obj_root = "@CMAKE_BINARY_DIR@"
 
 # 引入通用的 lit 配置
-lit_config.load_config(config, os.path.join(config.tiny_src_root, "test/lit.cfg.py"))
+lit_config.load_config(config, os.path.join(config.mlir_gpu_src_root, "test/lit.cfg.py"))
