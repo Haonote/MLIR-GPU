@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(MLIR-GPU LANGUAGES CXX C)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -44,3 +45,4 @@ find_program(LLVM_EXTERNAL_LIT NAMES llvm-lit lit
     /home/hao/project/LLVM/llvm-project/build/bin
 )
 add_subdirectory(test)
+add_subdirectory(lib)

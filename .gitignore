@@ -18,3 +18,9 @@ Makefile
 *.so
 *.dylib
 *.exe
+
+# 编辑器与语言服务配置
+.vscode/
+.clangd
+compile_commands.json
+documents/
