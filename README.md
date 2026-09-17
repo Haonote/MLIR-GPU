@@ -33,4 +33,3 @@ build/bin/mlir-gpu-opt test/dummy.mlir
 输入契约与诊断 → 可消费的配置/调度 → GPU/NVVM/PTX → 明确 kernel ABI 的 Driver runner → 数值测试与同口径性能实验。
 
 验收包括至少 8 个支持 shape、独立拒绝测试、配置引起的 IR 变化、一次有证据的优化、原始数据和复现命令。动态 shape、Tensor Core、多卡和其他后端不属于当前已实现能力。
-

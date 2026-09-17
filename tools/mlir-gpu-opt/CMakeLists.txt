@@ -23,4 +23,5 @@ target_link_libraries(mlir-gpu-opt
     MLIRAnalysis
     MLIRIR
     MLIRSupport
+    MLIRGPUCustomTransforms
 )

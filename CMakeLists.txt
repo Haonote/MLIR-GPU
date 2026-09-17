@@ -35,7 +35,9 @@ link_directories(${LLVM_BUILD_LIBRARY_DIR})
 add_definitions(${LLVM_DEFINITIONS})
 
 # 4. 添加子目录
+add_subdirectory(lib)
 add_subdirectory(tools/mlir-gpu-opt)
+
 
 # 5. 测试配置
 find_program(LLVM_EXTERNAL_LIT NAMES llvm-lit lit
@@ -45,4 +47,3 @@ find_program(LLVM_EXTERNAL_LIT NAMES llvm-lit lit
     /home/hao/project/LLVM/llvm-project/build/bin
 )
 add_subdirectory(test)
-add_subdirectory(lib)
