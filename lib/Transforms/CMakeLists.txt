@@ -3,6 +3,7 @@ add_mlir_library(MLIRGPUCustomTransforms
 
   LINK_LIBS PUBLIC
   MLIRFuncDialect
+  MLIRLinalgDialect
   MLIRIR
   MLIRPass
 )
