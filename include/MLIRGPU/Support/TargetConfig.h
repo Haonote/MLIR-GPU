@@ -46,6 +46,24 @@ struct MatmulShapeConstraints {
   }
 };
 
+struct MatmulTileSizes {
+  int64_t m = 16;
+  int64_t n = 16;
+  int64_t k = 16;
+};
+
+struct MatmulTargetConfig {
+  MatmulShapeConstraints shapeConstraints;
+  MatmulTileSizes tileSizes;
+  MatmulTileSizes selectTileSizes(int64_t m, int64_t n, int64_t k) const {
+    if (m >= 128 && n >= 128 && k >= 32 && m % 32 == 0 && n % 32 == 0 &&
+        k % 16 == 0)
+      return {32, 32, 16};
+
+    return tileSizes;
+  }
+};
+
 } // namespace mlir::mlir_gpu
 
 #endif // MLIRGPU_SUPPORT_TARGETCONFIG_H_

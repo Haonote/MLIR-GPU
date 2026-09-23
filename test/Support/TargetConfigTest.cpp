@@ -8,6 +8,7 @@
 
 #include <array>
 #include <cstdint>
+#include <iostream>
 
 namespace {
 
@@ -22,6 +23,34 @@ int check(llvm::StringRef caseName, mlir::LogicalResult actual,
   return 1;
 }
 
+bool testDefaultMatmulTargetConfig() {
+  const mlir::mlir_gpu::MatmulTargetConfig config;
+
+  if (config.tileSizes.m != 16 || config.tileSizes.n != 16 ||
+      config.tileSizes.k != 16) {
+    std::cerr << "default tile sizes should be 16x16x16\n";
+    return false;
+  }
+
+  if (mlir::failed(config.shapeConstraints.isSatisfied(64, 64, 64))) {
+    std::cerr << "default constraints should accept 64x64x64\n";
+    return false;
+  }
+  const auto smallTiles = config.selectTileSizes(64, 64, 64);
+  if (smallTiles.m != 16 || smallTiles.n != 16 || smallTiles.k != 16) {
+    std::cerr << "64x64x64 should use 16x16x16 tiles\n";
+    return false;
+  }
+
+  const auto largeTiles = config.selectTileSizes(128, 128, 64);
+  if (largeTiles.m != 32 || largeTiles.n != 32 || largeTiles.k != 16) {
+    std::cerr << "128x128x64 should use 32x32x16 tiles\n";
+    return false;
+  }
+
+  return true;
+}
+
 } // namespace
 
 int main() {
@@ -29,6 +58,8 @@ int main() {
 
   int failures = 0;
   MatmulShapeConstraints defaults;
+  if (!testDefaultMatmulTargetConfig())
+    ++failures;
 
   failures +=
       check("default accepts 64x64x64", defaults.isSatisfied(64, 64, 64), true);

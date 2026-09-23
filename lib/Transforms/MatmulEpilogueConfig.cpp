@@ -2,7 +2,10 @@
 #include "MLIRGPU/Transforms/Passes.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
+#include "mlir/IR/AffineMap.h"
+#include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypes.h"
+#include <algorithm>
 #include <memory>
 
 namespace mlir::mlir_gpu {
@@ -15,8 +18,8 @@ struct MatmulEpilogueConfigPass
 
   void runOnOperation() final {
     auto funcOp = getOperation();
-    MatmulShapeConstraints constraints;
-    funcOp.walk([&constraints](Operation *op) {
+    MatmulTargetConfig targetConfig;
+    funcOp.walk([&targetConfig](Operation *op) {
       auto matmul = llvm::dyn_cast<linalg::MatmulOp>(op);
       if (!matmul)
         return;
@@ -34,6 +37,12 @@ struct MatmulEpilogueConfigPass
         return;
       }
 
+      if (!llvm::isa<Float32Type>(lhsType.getElementType()) ||
+          !llvm::isa<Float32Type>(rhsType.getElementType()) ||
+          !llvm::isa<Float32Type>(initType.getElementType())) {
+        matmul.emitRemark() << "unsupported matmul element types; expected f32";
+        return;
+      }
       if (!lhsType.hasStaticShape() || !rhsType.hasStaticShape() ||
           !initType.hasStaticShape()) {
         matmul.emitRemark() << "unsupported matmul shape; expected static "
@@ -41,18 +50,40 @@ struct MatmulEpilogueConfigPass
         return;
       }
 
-    
       int64_t M = lhsType.getDimSize(0);
       int64_t K = lhsType.getDimSize(1);
       int64_t N = rhsType.getDimSize(1);
-      if (failed(constraints.isSatisfied(M, N, K))) {
+      if (failed(targetConfig.shapeConstraints.isSatisfied(M, N, K))) {
         matmul.emitRemark()
             << "unsupported matmul shape; expected static positive M, N, and K";
         return;
       }
+      auto indexingMaps = matmul.getIndexingMapsArray();
 
-      matmul.emitRemark() << "found linalg.matmul with M=" << M << " N=" << N
-                          << " K=" << K;
+      MLIRContext *context = matmul.getContext();
+      AffineExpr d0 = getAffineDimExpr(0, context);
+      AffineExpr d1 = getAffineDimExpr(1, context);
+      AffineExpr d2 = getAffineDimExpr(2, context);
+
+      SmallVector<AffineMap> expectedIndexingMaps = {
+          AffineMap::get(3, 0, {d0, d2}, context),
+          AffineMap::get(3, 0, {d2, d1}, context),
+          AffineMap::get(3, 0, {d0, d1}, context),
+      };
+
+      if (indexingMaps.size() != expectedIndexingMaps.size() ||
+          !std::equal(indexingMaps.begin(), indexingMaps.end(),
+                      expectedIndexingMaps.begin())) {
+        matmul.emitRemark() << "unsupported matmul layout; expected standard "
+                               "MxK * KxN indexing";
+        return;
+      }
+
+      const auto tileSizes = targetConfig.selectTileSizes(M, N, K);
+      matmul->setAttr(
+          "mlir_gpu.tile_sizes",
+          DenseI64ArrayAttr::get(matmul.getContext(),
+                                 {tileSizes.m, tileSizes.n, tileSizes.k}));
     });
   }
 
@@ -61,7 +92,7 @@ struct MatmulEpilogueConfigPass
   }
 
   StringRef getDescription() const final {
-    return "Validate and configure supported matmul epilogues";
+    return "Validate and configure supported linalg.matmul operations";
   }
 };
 
